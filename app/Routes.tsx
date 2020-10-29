@@ -19,6 +19,7 @@ import ProductDetails from './containers/ProductDetails';
 import AddProduct from './containers/AddProduct';
 import EditProduct from './containers/EditProduct';
 import Sales from './containers/Sales';
+import Cart from './containers/Cart';
 import WithAside from './components/WithAside';
 import { selectAuthentic } from './features/auth/authSlice';
 
@@ -190,6 +191,19 @@ export default function Routes() {
             return authentic ? (
               <WithAside>
                 <Sales />
+              </WithAside>
+            ) : (
+              <LoginPage />
+            );
+          }}
+          exact
+        />
+        <Route
+          path="/cart"
+          render={() => {
+            return authentic ? (
+              <WithAside>
+                <Cart />
               </WithAside>
             ) : (
               <LoginPage />

@@ -146,23 +146,6 @@ const Sales = () => {
                 </Box>
               ))}
             </Box>
-            <Box as="tfoot" w="100%" borderTopWidth={1}>
-              <Box as="tr" w="100%">
-                <Text as="td"> </Text>
-                <Text as="td" textAlign="center" aria-rowspan={2}>
-                  Total Amount(&#8377;)
-                </Text>
-                <Text as="td" textAlign="center">
-                  100
-                </Text>
-                <Text as="td" textAlign="center">
-                  100
-                </Text>
-                <Text as="td" textAlign="center">
-                  {' '}
-                </Text>
-              </Box>
-            </Box>
           </Box>
         </Box>
         {fetchingSales && (

@@ -1,11 +1,15 @@
 /* eslint-disable react/prop-types */
 import React from 'react';
 import { useHistory } from 'react-router';
+import { useSelector } from 'react-redux';
 import { Box, Flex, PseudoBox, Stack, Text } from '@chakra-ui/core';
 import { IconType } from 'react-icons';
 import { BsFillPeopleFill, BsGraphUp } from 'react-icons/bs';
 import { FaMoneyCheckAlt, FaBoxes } from 'react-icons/fa';
 import { CgGym } from 'react-icons/cg';
+import { ImCart } from 'react-icons/im';
+
+import { selectCart } from '../features/cart/cartSlice';
 
 interface IButtonProps {
   icon: IconType;
@@ -44,7 +48,59 @@ const CustomButton: React.FC<IButtonProps> = ({
   </PseudoBox>
 );
 
+interface IButtonWithNumProps extends IButtonProps {
+  num?: number;
+}
+const CustomButtonWithNum: React.FC<IButtonWithNumProps> = ({
+  icon,
+  title,
+  isActive = false,
+  onClick,
+  num = 0,
+}) => (
+  <PseudoBox
+    as="button"
+    py={3}
+    px={2}
+    width="100%"
+    transition="all 0.2s cubic-bezier(.08,.52,.52,1)"
+    fontSize="lg"
+    fontWeight="medium"
+    bg={isActive ? 'white' : 'gray.300'}
+    color={isActive ? 'gray.600' : 'white'}
+    _hover={{ bg: 'white', color: 'gray.500' }}
+    _active={{
+      bg: 'white',
+      color: 'gray.500',
+    }}
+    outline="none"
+  >
+    <Stack isInline alignItems="center" pl={4} onClick={onClick}>
+      <Box as={icon} />
+      <Box pos="relative">
+        <Text pl={4}>{title}</Text>
+        {num > 0 && (
+          <Flex
+            justifyContent="center"
+            alignItems="center"
+            w={6}
+            h={6}
+            rounded="full"
+            backgroundColor="purple.400"
+            pos="absolute"
+            top="-25%"
+            right="-42%"
+          >
+            <Text fontSize="sm">{num < 10 ? `0${num}` : num}</Text>
+          </Flex>
+        )}
+      </Box>
+    </Stack>
+  </PseudoBox>
+);
+
 const Aside = () => {
+  const cart = useSelector(selectCart);
   const history = useHistory();
 
   return (
@@ -99,6 +155,13 @@ const Aside = () => {
         title="Sales"
         isActive={history.location.pathname.includes('sales')}
         onClick={() => history.replace('/sales')}
+      />
+      <CustomButtonWithNum
+        icon={ImCart}
+        title="Carts"
+        isActive={history.location.pathname.includes('carts')}
+        onClick={() => history.replace('/cart')}
+        num={cart.length}
       />
     </Box>
   );

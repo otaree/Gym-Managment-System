@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { ipcRenderer } from 'electron';
 import { useHistory } from 'react-router';
+import { useSelector, useDispatch } from 'react-redux';
 import {
   Box,
   Heading,
@@ -19,6 +20,11 @@ import {
 } from '@chakra-ui/core';
 
 import Pagination from '../components/TablePagination';
+import {
+  selectCart,
+  addProduct,
+  removeProduct,
+} from '../features/cart/cartSlice';
 import { IProductDocument, IProductQuery } from '../db';
 import ipcEvents from '../constants/ipcEvents.json';
 
@@ -36,6 +42,8 @@ const Products = () => {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [fetchingProducts, setFetchingProducts] = useState(false);
+  const cart = useSelector(selectCart);
+  const dispatch = useDispatch();
   const history = useHistory();
 
   const fetchProducts = async (productQuery: IProductQuery) => {
@@ -58,6 +66,11 @@ const Products = () => {
 
     fetchProducts(queryPrepaid);
   }, [query, query.limit, query.skip, query.search]);
+
+  const inCart = (id: string) => {
+    const product = cart.find((item) => item.product._id === id);
+    return !!product;
+  };
 
   return (
     <Box>
@@ -143,8 +156,8 @@ const Products = () => {
                 <Text as="th" w={120}>
                   Quantity
                 </Text>
-                <Text as="th" w={76}>
-                  View
+                <Text as="th" w={80}>
+                  Actions
                 </Text>
               </Box>
             </Box>
@@ -167,15 +180,34 @@ const Products = () => {
                     {product.quantity}
                   </Text>
                   <Box as="td">
-                    <Flex justifyContent="center">
+                    <Stack isInline>
                       <IconButton
                         icon="view"
                         aria-label="view"
                         variant="ghost"
                         variantColor="purple"
-                        onClick={() => history.push(`/products/${product._id}`)}
+                        onClick={() => {
+                          history.push(`/products/${product._id}`);
+                        }}
                       />
-                    </Flex>
+                      {inCart(product._id!) ? (
+                        <IconButton
+                          icon="minus"
+                          aria-label="remove from cart"
+                          variant="ghost"
+                          variantColor="red"
+                          onClick={() => dispatch(removeProduct(product._id))}
+                        />
+                      ) : (
+                        <IconButton
+                          icon="add"
+                          aria-label="add to cart"
+                          variant="ghost"
+                          variantColor="green"
+                          onClick={() => dispatch(addProduct(product))}
+                        />
+                      )}
+                    </Stack>
                   </Box>
                 </Box>
               ))}

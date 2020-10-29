@@ -1,6 +1,6 @@
 import React from 'react';
 import { ipcRenderer } from 'electron';
-import { useHistory } from 'react-router';
+// import { useHistory } from 'react-router';
 // import { Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { useForm } from 'react-hook-form';
@@ -32,7 +32,7 @@ type FormData = {
 
 const LoginPage: React.FC = () => {
   const dispatch = useDispatch();
-  const history = useHistory();
+  // const history = useHistory();
   const { register, formState, handleSubmit, errors } = useForm<FormData>({
     defaultValues: {
       name: 'admin',
