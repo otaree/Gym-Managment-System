@@ -22,9 +22,7 @@ import {
   Text,
 } from '@chakra-ui/core';
 import { AiFillPrinter } from 'react-icons/ai';
-import { PDFViewer } from '@react-pdf/renderer';
 
-import SaleReceipt from '../components/SaleReceipt';
 import BackButton from '../components/BackButton';
 import { ISaleDocument } from '../db';
 import ipcEvents from '../constants/ipcEvents.json';
@@ -43,6 +41,10 @@ const SaleDetails = () => {
     await ipcRenderer.invoke(ipcEvents.DELETE_SALE, id);
     setIsFetching(false);
     history.push('/sales');
+  };
+
+  const onPrint = async () => {
+    await ipcRenderer.invoke(ipcEvents.PDF_SALES, id);
   };
 
   useEffect(() => {
@@ -65,6 +67,7 @@ const SaleDetails = () => {
       </Flex>
     );
   }
+
   return (
     <Box backgroundColor="gray.50">
       <BackButton />
@@ -75,9 +78,10 @@ const SaleDetails = () => {
             icon={AiFillPrinter}
             variantColor="purple"
             aria-label="print"
-            onClick={() => {}}
+            onClick={onPrint}
           />
           <IconButton
+            ml={2}
             icon="delete"
             variantColor="red"
             aria-label="delete"
@@ -192,10 +196,6 @@ const SaleDetails = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <PDFViewer>
-        <SaleReceipt />
-      </PDFViewer>
     </Box>
   );
 };

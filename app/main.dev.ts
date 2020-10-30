@@ -31,8 +31,7 @@ import initializeDB, {
 import ipcEvents from './constants/ipcEvents.json';
 import { ISaleProduct } from './db/model/sale';
 import { ISaleQuery } from './db/method/sale';
-import saveAsPDF from './utils/saveAsPDF';
-import SaleReceiptComponent from './components/SaleReceipt';
+import saveSaleReceiptPDF from './utils/saveAsPDF';
 
 const appPath = path.join(app.getPath('userData'), 'gymvenger');
 
@@ -470,4 +469,11 @@ ipcMain.handle(ipcEvents.GET_SALES, async (_event, data: ISaleQuery) => {
   return res;
 });
 
-saveAsPDF(SaleReceiptComponent);
+/**
+ * A handler function to save sale receipt in pdf
+ * @param {string} id - id of the sale
+ */
+ipcMain.handle(ipcEvents.PDF_SALES, async (_event, id: string) => {
+  const sale = await db.sale.getSaleById(id);
+  saveSaleReceiptPDF(sale);
+});
