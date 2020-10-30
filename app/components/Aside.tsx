@@ -90,8 +90,10 @@ const CustomButtonWithNum: React.FC<IButtonWithNumProps> = ({
             pos="absolute"
             top="-25%"
             right="-42%"
+            // color={isActive ? 'white' : 'black'}
+            color="white"
           >
-            <Text fontSize="sm">{num < 10 ? `0${num}` : num}</Text>
+            <Text fontSize="sm">{num < 10 ? `0${num}` : `+9`}</Text>
           </Flex>
         )}
       </Box>
@@ -159,7 +161,7 @@ const Aside = () => {
       <CustomButtonWithNum
         icon={ImCart}
         title="Carts"
-        isActive={history.location.pathname.includes('carts')}
+        isActive={history.location.pathname.includes('cart')}
         onClick={() => history.replace('/cart')}
         num={cart.length}
       />

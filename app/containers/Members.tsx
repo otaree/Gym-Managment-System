@@ -186,6 +186,9 @@ const Members = () => {
                   Name
                 </Text>
                 <Text as="th" borderWidth={1} w={120}>
+                  Member Id
+                </Text>
+                <Text as="th" borderWidth={1} w={120}>
                   Phone No.
                 </Text>
                 <Text as="th" borderWidth={1} w={120}>
@@ -214,6 +217,9 @@ const Members = () => {
                   </Box>
                   <Text as="td" pl={2}>
                     {`${member.firstName} ${member.lastName}`}
+                  </Text>
+                  <Text as="td" textAlign="center">
+                    {member.memberId}
                   </Text>
                   <Text as="td" textAlign="center">
                     {member.phoneNo}

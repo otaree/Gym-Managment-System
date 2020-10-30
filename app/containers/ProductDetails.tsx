@@ -18,9 +18,6 @@ import {
   IconButton,
   SimpleGrid,
   Spinner,
-  Stack,
-  Tag,
-  TagLabel,
   Text,
 } from '@chakra-ui/core';
 
@@ -46,13 +43,12 @@ const ProductDetails = () => {
 
   useEffect(() => {
     const fetchProduct = async () => {
-      // const isAuth = await ipcRenderer.invoke(ipcEvents.STAFF_LOGIN, data);
       setIsFetching(true);
-      const resPrepaid: IProductDocument = await ipcRenderer.invoke(
+      const resProduct: IProductDocument = await ipcRenderer.invoke(
         ipcEvents.GET_PRODUCT,
         id
       );
-      setProduct(resPrepaid);
+      setProduct(resProduct);
       setIsFetching(false);
     };
     fetchProduct();

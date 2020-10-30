@@ -6,6 +6,34 @@ import config from '../../constants/config.json';
 export default function methods(filepath: string) {
   const db = initializeMember(path.join(filepath, 'member.db'));
 
+  function pad(number: number, length: number) {
+    let str = String(number);
+    while (str.length < length) {
+      str = `0${str}`;
+    }
+
+    return str;
+  }
+
+  const generateMemberId = (): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const year = String(new Date().getFullYear());
+      const name = `GV${year.substring(year.length - 2)}`;
+      db.find({ memberId: { $regex: new RegExp(name) } })
+        .limit(1)
+        .sort({ createdAt: -1 })
+        .exec((err, [member]) => {
+          if (err) reject(err);
+          if (member) {
+            const { memberId } = member;
+            const seq = Number(memberId.substring(memberId.length - 6));
+            resolve(`${name}${pad(seq + 1, 6)}`);
+          } else {
+            resolve(`${name}${pad(1, 6)}`);
+          }
+        });
+    });
+
   const getMember = async (id: string) => {
     const member = await db.asyncFindOne({ _id: id });
     return member;
@@ -42,7 +70,7 @@ export default function methods(filepath: string) {
       const query: IQuery = {};
       if (search) {
         if (search.startsWith(config.gymAB)) {
-          query.memberId = search;
+          query.memberId = search.trim().toUpperCase();
         } else {
           const [firstName, lastName] = search.trim().split(' ');
           if (!lastName) {
@@ -82,6 +110,9 @@ export default function methods(filepath: string) {
     });
 
   const createMember = async (data: IMember) => {
+    const memberId = await generateMemberId();
+    const isIdPresent = await db.asyncFindOne({ memberId });
+    if (isIdPresent) throw new Error('Member Id already present');
     const member = await db.asyncInsert({
       ...data,
       workoutPlane: {},
@@ -89,6 +120,7 @@ export default function methods(filepath: string) {
       monthlyPayments: [],
       products: [],
       isMember: true,
+      memberId,
       createdAt: new Date(),
     });
     return member;

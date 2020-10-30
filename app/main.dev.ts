@@ -22,6 +22,7 @@ import MenuBuilder from './menu';
 // eslint-disable-next-line import/no-cycle
 import initializeDB, {
   IMember,
+  IMemberProduct,
   IPrepaid,
   IProduct,
   IProductDocument,
@@ -30,6 +31,8 @@ import initializeDB, {
 import ipcEvents from './constants/ipcEvents.json';
 import { ISaleProduct } from './db/model/sale';
 import { ISaleQuery } from './db/method/sale';
+import saveAsPDF from './utils/saveAsPDF';
+import SaleReceiptComponent from './components/SaleReceipt';
 
 const appPath = path.join(app.getPath('userData'), 'gymvenger');
 
@@ -376,7 +379,7 @@ ipcMain.handle(ipcEvents.GET_PRODUCTS, async (_event, data: IProductQuery) => {
 
 export interface ICreateSaleData {
   products: { product: IProductDocument; quantity: number }[];
-  buyer: { memberId?: string; name: string; isMember: boolean };
+  buyer: { memberId?: string; name: string; isMember: boolean; id?: string };
 }
 /**
  * A handler function to create sale
@@ -384,15 +387,6 @@ export interface ICreateSaleData {
  * @returns {Object}
  */
 ipcMain.handle(ipcEvents.CREATE_SALE, async (_event, data: ICreateSaleData) => {
-  await Promise.all(
-    data.products.map((el) =>
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      db.product.updateProduct(el.product._id!, {
-        quantity: el.product.quantity - el.quantity,
-      })
-    )
-  );
-
   const saleProducts = data.products.map((el) => {
     const { product, quantity } = el;
     const saleProduct: ISaleProduct = {
@@ -411,6 +405,32 @@ ipcMain.handle(ipcEvents.CREATE_SALE, async (_event, data: ICreateSaleData) => {
     (acc, curr) => acc + curr.sellingPrice * curr.quantity,
     0
   );
+
+  if (data.buyer.isMember && data.buyer.id && data.buyer.id.trim().length > 0) {
+    const member = await db.member.getMember(data.buyer.id);
+    const products = [
+      ...member.products,
+      {
+        date: new Date(),
+        grossTotal: totalSellingPrice,
+        products: data.products.map((item) => ({
+          name: item.product.name,
+          price: item.product.sellingPrice,
+          quantity: item.quantity,
+        })),
+      },
+    ] as IMemberProduct[];
+    await db.member.updateMember(member._id!, { products });
+  }
+  await Promise.all(
+    data.products.map((el) =>
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      db.product.updateProduct(el.product._id!, {
+        quantity: el.product.quantity - el.quantity,
+      })
+    )
+  );
+
   const sale = await db.sale.createSale({
     buyer: data.buyer,
     products: saleProducts,
@@ -449,3 +469,5 @@ ipcMain.handle(ipcEvents.GET_SALES, async (_event, data: ISaleQuery) => {
   const res = await db.sale.getSales(data);
   return res;
 });
+
+saveAsPDF(SaleReceiptComponent);

@@ -31,11 +31,11 @@ export interface IMonthlyPayment {
 
 export interface IMemberProduct {
   date: Date;
-  product: {
+  products: {
     name: string;
     price: number;
-  };
-  quantity: number;
+    quantity: number;
+  }[];
   grossTotal: number;
 }
 
@@ -77,6 +77,7 @@ export interface IMemberDocument extends IMember {
   products: IMemberProduct[];
   leavingDate?: Date;
   isMember: boolean;
+  memberId: string;
   createdAt: Date;
 }
 

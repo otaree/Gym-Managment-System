@@ -36,6 +36,7 @@ import WorkoutPlan from '../components/MemberWorkoutPlan';
 import DietPlan from '../components/MemberDietPlan';
 import MonthlyPayment from '../components/MemberMonthlyPayment';
 import Products from '../components/MemberProducts';
+import Purchases from '../components/MemberPurchases';
 import BackButton from '../components/BackButton';
 import {
   IMemberDocument,
@@ -77,6 +78,7 @@ const MemberDetails = () => {
         ipcEvents.GET_MEMBER,
         id
       );
+      console.log('RES_MEMBER:::', resMember);
       setMember(resMember);
       setIsFetching(false);
     };
@@ -142,6 +144,10 @@ const MemberDetails = () => {
         <Image src={member?.img} width={126} height={160} />
       </Flex>
       <SimpleGrid columns={2} spacingX={4} spacingY={1} my={4} w="80%">
+        <Text>Member Id:</Text>
+        <Text fontWeight="medium" textTransform="capitalize">
+          {member?.memberId}
+        </Text>
         <Text>First Name:</Text>
         <Text fontWeight="medium" textTransform="capitalize">
           {member?.firstName}
@@ -264,7 +270,7 @@ const MemberDetails = () => {
           <Tab>Workout Plan</Tab>
           <Tab>Diet Plan</Tab>
           <Tab>Monthly Payment</Tab>
-          <Tab>Products</Tab>
+          <Tab>Purchases</Tab>
         </TabList>
 
         <TabPanels>
@@ -282,7 +288,7 @@ const MemberDetails = () => {
             />
           </TabPanel>
           <TabPanel>
-            <Products products={member?.products as IMemberProduct[]} />
+            <Purchases products={member?.products as IMemberProduct[]} />
           </TabPanel>
         </TabPanels>
       </Tabs>

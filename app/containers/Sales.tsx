@@ -139,7 +139,7 @@ const Sales = () => {
                         aria-label="view"
                         variant="ghost"
                         variantColor="purple"
-                        onClick={() => {}}
+                        onClick={() => history.push(`/sales/${sale._id}`)}
                       />
                     </Flex>
                   </Box>
