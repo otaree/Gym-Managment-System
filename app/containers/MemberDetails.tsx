@@ -1,8 +1,10 @@
+/* eslint-disable import/no-cycle */
+/* eslint-disable react/no-unused-prop-types */
 /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
 /* eslint-disable react/jsx-one-expression-per-line */
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { ipcRenderer } from 'electron';
 import { useParams, useHistory } from 'react-router';
 import {
@@ -31,17 +33,18 @@ import {
   AlertDialogOverlay,
   Button,
 } from '@chakra-ui/core';
+import { AiFillPrinter } from 'react-icons/ai';
+import ReactToPrint from 'react-to-print';
 
+import MemberToPDF from '../components/MemberToPDF';
 import WorkoutPlan from '../components/MemberWorkoutPlan';
 import DietPlan from '../components/MemberDietPlan';
 import MonthlyPayment from '../components/MemberMonthlyPayment';
-import Products from '../components/MemberProducts';
 import Purchases from '../components/MemberPurchases';
 import BackButton from '../components/BackButton';
 import {
   IMemberDocument,
   IPlanWorkout,
-  IDiet,
   IMonthlyPayment,
   IMemberProduct,
 } from '../db';
@@ -55,7 +58,8 @@ const MemberDetails = () => {
   const [member, setMember] = useState<IMemberDocument | null>();
   const [isFetching, setIsFetching] = useState(false);
   const [isDeleteAlert, setIsDeleteAlert] = useState(false);
-  const deleteRef = React.useRef();
+  const deleteRef = useRef();
+  const printRef = useRef();
   const { id } = useParams<{ id: string }>();
   const history = useHistory();
 
@@ -65,25 +69,25 @@ const MemberDetails = () => {
     setIsDeleteAlert(false);
     setIsFetching(true);
     await ipcRenderer.invoke(ipcEvents.DELETE_MEMBER, id);
-    console.log('DELETED!!!');
     setIsFetching(false);
     history.push('/members');
   };
 
-  useEffect(() => {
-    const fetchMember = async () => {
-      // const isAuth = await ipcRenderer.invoke(ipcEvents.STAFF_LOGIN, data);
-      setIsFetching(true);
-      const resMember: IMemberDocument = await ipcRenderer.invoke(
-        ipcEvents.GET_MEMBER,
-        id
-      );
-      console.log('RES_MEMBER:::', resMember);
-      setMember(resMember);
-      setIsFetching(false);
-    };
-    fetchMember();
+  const fetchMember = useCallback(async () => {
+    console.log('FETCH_MEMBER!!!');
+    // const isAuth = await ipcRenderer.invoke(ipcEvents.STAFF_LOGIN, data);
+    setIsFetching(true);
+    const resMember: IMemberDocument = await ipcRenderer.invoke(
+      ipcEvents.GET_MEMBER,
+      id
+    );
+    setMember(resMember);
+    setIsFetching(false);
   }, [id]);
+
+  useEffect(() => {
+    fetchMember();
+  }, [id, fetchMember]);
 
   if (isFetching) {
     return (
@@ -101,6 +105,14 @@ const MemberDetails = () => {
       0
   ) {
     paymentDue = true;
+  }
+
+  if (!member) {
+    return (
+      <Flex justifyContent="center" alignItems="center" h="80vh">
+        <Heading>No Details</Heading>
+      </Flex>
+    );
   }
 
   return (
@@ -126,10 +138,22 @@ const MemberDetails = () => {
           )}
         </Stack>
         <ButtonGroup>
+          <ReactToPrint
+            trigger={() => (
+              <IconButton
+                icon={AiFillPrinter}
+                variantColor="blue"
+                aria-label="print"
+              />
+            )}
+            content={() => printRef.current!}
+            documentTitle="member-detail"
+          />
           <IconButton
             icon="edit"
             variantColor="purple"
             aria-label="edit"
+            ml={2}
             onClick={() => history.push(`/members/${id}/edit`)}
           />
           <IconButton
@@ -275,12 +299,10 @@ const MemberDetails = () => {
 
         <TabPanels>
           <TabPanel>
-            <WorkoutPlan workoutPlan={member?.workoutPlane as IWorkoutProps} />
+            <WorkoutPlan workoutPlan={member?.workoutPlane} />
           </TabPanel>
           <TabPanel>
-            <DietPlan
-              dietPlan={member?.workoutPlane as { [key: string]: IDiet[] }}
-            />
+            <DietPlan id={id} dietPlan={member?.dietPlan} showActions />
           </TabPanel>
           <TabPanel>
             <MonthlyPayment
@@ -321,6 +343,11 @@ const MemberDetails = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <Box left="-110%" pos="absolute">
+        <Box ref={printRef} width="100%">
+          <MemberToPDF member={member} />
+        </Box>
+      </Box>
     </Box>
   );
 };

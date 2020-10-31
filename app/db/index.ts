@@ -6,8 +6,11 @@ import {
   IWorkoutPlan,
   IPlanWorkout,
   IDiet,
+  IDietPlan,
   IMonthlyPayment,
   IMemberProduct,
+  DayOfWeek,
+  TypeOfMeal,
 } from './model/member';
 import { IPrepaid, IPrepaidDocument } from './model/prepaid';
 // eslint-disable-next-line import/no-cycle
@@ -23,6 +26,7 @@ export {
   IWorkoutPlan,
   IPlanWorkout,
   IDiet,
+  IDietPlan,
   IMonthlyPayment,
   IMemberProduct,
   IPrepaid,
@@ -34,6 +38,8 @@ export {
   ISale,
   ISaleDocument,
   ISaleQuery,
+  DayOfWeek,
+  TypeOfMeal,
 };
 
 export default (appPath: string) => {

@@ -1,5 +1,21 @@
 import AsyncNedb from 'nedb-async';
 
+export enum DayOfWeek {
+  Monday,
+  Tuesday,
+  Wednesday,
+  Thursday,
+  Friday,
+  Saturday,
+  Sunday,
+}
+
+export enum TypeOfMeal {
+  Breakfast,
+  Lunch,
+  Dinner,
+}
+
 export interface IPlanWorkout {
   name: string;
   sets: number;
@@ -8,13 +24,7 @@ export interface IPlanWorkout {
 }
 
 export interface IWorkoutPlan {
-  monday?: IPlanWorkout[];
-  tuesday?: IPlanWorkout[];
-  wednesday?: IPlanWorkout[];
-  thursday?: IPlanWorkout[];
-  friday?: IPlanWorkout[];
-  saturday?: IPlanWorkout[];
-  sunday?: IPlanWorkout[];
+  [key: string]: IPlanWorkout[];
 }
 
 export interface IDiet {
@@ -22,6 +32,20 @@ export interface IDiet {
   quantity: number;
   unit: string;
 }
+
+export interface IDietPlan {
+  [key: string]: IDiet[];
+}
+
+// export interface IWorkoutPlan {
+//   monday?: IPlanWorkout[];
+//   tuesday?: IPlanWorkout[];
+//   wednesday?: IPlanWorkout[];
+//   thursday?: IPlanWorkout[];
+//   friday?: IPlanWorkout[];
+//   saturday?: IPlanWorkout[];
+//   sunday?: IPlanWorkout[];
+// }
 
 export interface IMonthlyPayment {
   date: Date;
@@ -68,11 +92,7 @@ export interface IMember {
 export interface IMemberDocument extends IMember {
   _id?: string;
   workoutPlane: IWorkoutPlan;
-  dietPlan: {
-    breakfast?: IDiet[];
-    lunch?: IDiet[];
-    dinner?: IDiet[];
-  };
+  dietPlan: IDietPlan;
   monthlyPayments: IMonthlyPayment[];
   products: IMemberProduct[];
   leavingDate?: Date;

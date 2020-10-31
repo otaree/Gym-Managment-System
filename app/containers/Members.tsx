@@ -226,10 +226,15 @@ const Members = () => {
                   </Text>
                   <Box as="td">
                     <Flex justifyContent="center">
-                      {/* <Tag variantColor="green" variant="solid" rounded="full">
+                      {/* <Tag size="sm" variantColor="green" variant="solid" rounded="full">
                       <TagLabel>None</TagLabel>
                     </Tag> */}
-                      <Tag variantColor="red" variant="solid" rounded="full">
+                      <Tag
+                        size="sm"
+                        variantColor="red"
+                        variant="solid"
+                        rounded="full"
+                      >
                         <TagLabel>Due</TagLabel>
                       </Tag>
                     </Flex>
@@ -245,7 +250,12 @@ const Members = () => {
                           <TagIcon icon="check" size="12px" />
                         </Tag>
                       ) : (
-                        <Tag variantColor="red" variant="solid" rounded="full">
+                        <Tag
+                          size="sm"
+                          variantColor="red"
+                          variant="solid"
+                          rounded="full"
+                        >
                           <TagIcon icon="close" size="12px" />
                         </Tag>
                       )}

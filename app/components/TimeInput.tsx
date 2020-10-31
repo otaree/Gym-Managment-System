@@ -16,7 +16,6 @@ const TimeStateInput: React.FC<{
   const zeroPad = (num: number) => (num < 10 ? `0${num}` : `${num}`);
 
   const handleChange = (state: ITime) => {
-    console.log('TIME:::', state);
     onChange(state);
     setTimeState(state);
   };

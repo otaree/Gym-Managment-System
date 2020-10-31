@@ -2,7 +2,7 @@ import fs from 'fs';
 
 function imgToBase64(filePath: string): string {
   if (fs.existsSync(filePath)) {
-    return fs.readFileSync(filePath, 'base64');
+    return `data:image/png;base64,${fs.readFileSync(filePath, 'base64')}`;
   }
   return '';
 }

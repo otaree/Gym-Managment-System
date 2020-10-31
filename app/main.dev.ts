@@ -1,3 +1,4 @@
+/* eslint-disable import/no-cycle */
 /* eslint-disable no-underscore-dangle */
 /* eslint global-require: off, no-console: off */
 
@@ -31,7 +32,8 @@ import initializeDB, {
 import ipcEvents from './constants/ipcEvents.json';
 import { ISaleProduct } from './db/model/sale';
 import { ISaleQuery } from './db/method/sale';
-import saveSaleReceiptPDF from './utils/saveAsPDF';
+import { saveSaleReceiptPDF, saveMemberBasicPDF } from './utils/saveAsPDF';
+import { imgToBase64 } from './utils/fileFns';
 
 const appPath = path.join(app.getPath('userData'), 'gymvenger');
 
@@ -475,5 +477,19 @@ ipcMain.handle(ipcEvents.GET_SALES, async (_event, data: ISaleQuery) => {
  */
 ipcMain.handle(ipcEvents.PDF_SALES, async (_event, id: string) => {
   const sale = await db.sale.getSaleById(id);
-  saveSaleReceiptPDF(sale);
+  await saveSaleReceiptPDF(sale);
+});
+
+/**
+ * A handler function to save member basic info in pdf
+ * @param {string} id - id of the member
+ */
+ipcMain.handle(ipcEvents.PDF_MEMBER_BASIC, async (_event, id: string) => {
+  const member = await db.member.getMember(id);
+  const image = imgToBase64(member.img);
+  // fs.writeFileSync(
+  //   path.join(app.getPath('documents'), 'member.json'),
+  //   JSON.stringify({ member, image })
+  // );
+  await saveMemberBasicPDF(member, image);
 });
