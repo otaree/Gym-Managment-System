@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 /* eslint-disable import/no-cycle */
 /* eslint-disable react/no-unused-prop-types */
 /* eslint-disable react/no-unescaped-entities */
@@ -299,10 +300,20 @@ const MemberDetails = () => {
 
         <TabPanels>
           <TabPanel>
-            <WorkoutPlan workoutPlan={member?.workoutPlane} />
+            <WorkoutPlan
+              id={member._id!}
+              workoutPlan={member?.workoutPlane}
+              onUpdate={fetchMember}
+              showActions
+            />
           </TabPanel>
           <TabPanel>
-            <DietPlan id={id} dietPlan={member?.dietPlan} showActions />
+            <DietPlan
+              id={id}
+              dietPlan={member?.dietPlan}
+              onUpdate={fetchMember}
+              showActions
+            />
           </TabPanel>
           <TabPanel>
             <MonthlyPayment

@@ -1,7 +1,8 @@
 /* eslint-disable react/prop-types */
 /* eslint-disable react/no-array-index-key */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import React from 'react';
+import React, { useState } from 'react';
+import { ipcRenderer } from 'electron';
 import {
   Box,
   Text,
@@ -9,127 +10,35 @@ import {
   Flex,
   Stack,
   IconButton,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
+  useDisclosure,
 } from '@chakra-ui/core';
 
-import { IWorkoutPlan, DayOfWeek } from '../db';
+import WorkoutPlanForm from './WorkoutPlanForm';
+import { IWorkoutPlan, DayOfWeek, IPlanWorkout } from '../db';
+import ipcEvents from '../constants/ipcEvents.json';
 
 const WorkoutPlan: React.FC<{
   workoutPlan: IWorkoutPlan;
+  id: string;
   columns?: number;
   showActions?: boolean;
+  onUpdate?: () => void;
 }> = ({
   // eslint-disable-next-line react/prop-types
   workoutPlan,
+  id,
   columns = 3,
   showActions = false,
+  onUpdate = () => {},
 }) => {
-  const testWorkPlan: IWorkoutPlan = {
-    [DayOfWeek.Friday]: [
-      {
-        name: 'stretching',
-        sets: 1,
-        rep: 1,
-        minutes: 10,
-      },
-      {
-        name: 'running',
-        sets: 1,
-        rep: 1,
-        minutes: 10,
-      },
-      {
-        name: 'push up',
-        sets: 5,
-        rep: 10,
-      },
-      {
-        name: 'pull up',
-        sets: 3,
-        rep: 10,
-      },
-      {
-        name: 'curling',
-        sets: 5,
-        rep: 10,
-      },
-      {
-        name: 'running',
-        sets: 1,
-        rep: 1,
-        minutes: 10,
-      },
-    ],
-    [DayOfWeek.Monday]: [
-      {
-        name: 'stretching',
-        sets: 1,
-        rep: 1,
-        minutes: 10,
-      },
-      {
-        name: 'running',
-        sets: 1,
-        rep: 1,
-        minutes: 10,
-      },
-      {
-        name: 'push up',
-        sets: 5,
-        rep: 10,
-      },
-      {
-        name: 'pull up',
-        sets: 3,
-        rep: 10,
-      },
-      {
-        name: 'curling',
-        sets: 5,
-        rep: 10,
-      },
-      {
-        name: 'running',
-        sets: 1,
-        rep: 1,
-        minutes: 10,
-      },
-    ],
-    [DayOfWeek.Wednesday]: [
-      {
-        name: 'stretching',
-        sets: 1,
-        rep: 1,
-        minutes: 10,
-      },
-      {
-        name: 'running',
-        sets: 1,
-        rep: 1,
-        minutes: 10,
-      },
-      {
-        name: 'push up',
-        sets: 5,
-        rep: 10,
-      },
-      {
-        name: 'pull up',
-        sets: 3,
-        rep: 10,
-      },
-      {
-        name: 'curling',
-        sets: 5,
-        rep: 10,
-      },
-      {
-        name: 'running',
-        sets: 1,
-        rep: 1,
-        minutes: 10,
-      },
-    ],
-  };
+  const [modalDetails, setModalDetails] = useState({ type: '', dayOfWeek: '' });
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const mapDayName = (dayOfWeek: string) => {
     switch (Number(dayOfWeek)) {
@@ -152,10 +61,53 @@ const WorkoutPlan: React.FC<{
     }
   };
 
+  const onSubmit = async ({
+    dayOfWeek,
+    plans,
+  }: {
+    dayOfWeek: DayOfWeek;
+    plans: IPlanWorkout[];
+  }) => {
+    workoutPlan[dayOfWeek] = plans;
+    await ipcRenderer.invoke(ipcEvents.UPDATE_MEMBER, {
+      id,
+      data: { workoutPlane: workoutPlan },
+    });
+    onClose();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    onUpdate();
+  };
+
+  const onDelete = async (dayOfWeek: string) => {
+    const newWorkoutPlan = Object.keys(workoutPlan).reduce((acc, curr) => {
+      if (curr === dayOfWeek) return acc;
+      return { ...acc, [curr]: workoutPlan[curr] };
+    }, {});
+    await ipcRenderer.invoke(ipcEvents.UPDATE_MEMBER, {
+      id,
+      data: { workoutPlane: newWorkoutPlan },
+    });
+    onUpdate();
+  };
+
   return (
     <Box p={4}>
+      {showActions && (
+        <Flex justifyContent="flex-end" my={2}>
+          <IconButton
+            icon="add"
+            aria-label="add"
+            size="md"
+            variantColor="green"
+            onClick={() => {
+              setModalDetails({ type: 'add', dayOfWeek: '' });
+              onOpen();
+            }}
+          />
+        </Flex>
+      )}
       <SimpleGrid columns={columns} spacing={4}>
-        {Object.keys(testWorkPlan)
+        {Object.keys(workoutPlan)
           .sort()
           .map((weekday: string) => (
             <Box key={weekday} borderWidth={1} backgroundColor="white">
@@ -175,6 +127,10 @@ const WorkoutPlan: React.FC<{
                       variant="ghost"
                       variantColor="purple"
                       aria-label="edit"
+                      onClick={() => {
+                        setModalDetails({ type: 'edit', dayOfWeek: weekday });
+                        onOpen();
+                      }}
                     />
                     <IconButton
                       icon="delete"
@@ -182,6 +138,7 @@ const WorkoutPlan: React.FC<{
                       variant="ghost"
                       variantColor="red"
                       aria-label="delete"
+                      onClick={() => onDelete(weekday)}
                     />
                   </Stack>
                 )}
@@ -204,7 +161,7 @@ const WorkoutPlan: React.FC<{
                   </Box>
                 </Box>
                 <Box as="tbody">
-                  {testWorkPlan[weekday].map((plan, i) => (
+                  {workoutPlan[weekday].map((plan, i) => (
                     <Box as="tr" key={i} borderTopWidth={i === 0 ? 0 : 1}>
                       <Text as="td" pl={2} textTransform="capitalize">
                         {plan.name}
@@ -225,6 +182,22 @@ const WorkoutPlan: React.FC<{
             </Box>
           ))}
       </SimpleGrid>
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+            {modalDetails.type === 'edit' ? 'Edit Workout' : 'Add Workout'}
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <WorkoutPlanForm
+              onSubmit={onSubmit}
+              nameOfDay={modalDetails.dayOfWeek}
+              workoutPlans={workoutPlan[modalDetails.dayOfWeek] || []}
+            />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };

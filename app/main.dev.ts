@@ -28,12 +28,13 @@ import initializeDB, {
   IProduct,
   IProductDocument,
   IProductQuery,
+  IMemberPaymentQuery,
+  IMemberPayment,
 } from './db';
 import ipcEvents from './constants/ipcEvents.json';
 import { ISaleProduct } from './db/model/sale';
 import { ISaleQuery } from './db/method/sale';
-import { saveSaleReceiptPDF, saveMemberBasicPDF } from './utils/saveAsPDF';
-import { imgToBase64 } from './utils/fileFns';
+import { saveSaleReceiptPDF } from './utils/saveAsPDF';
 
 const appPath = path.join(app.getPath('userData'), 'gymvenger');
 
@@ -481,15 +482,51 @@ ipcMain.handle(ipcEvents.PDF_SALES, async (_event, id: string) => {
 });
 
 /**
- * A handler function to save member basic info in pdf
- * @param {string} id - id of the member
+ * A handler function to get a member payment
+ * @param {string} id- id of the member payment.
+ * @returns {Object}
  */
-ipcMain.handle(ipcEvents.PDF_MEMBER_BASIC, async (_event, id: string) => {
-  const member = await db.member.getMember(id);
-  const image = imgToBase64(member.img);
-  // fs.writeFileSync(
-  //   path.join(app.getPath('documents'), 'member.json'),
-  //   JSON.stringify({ member, image })
-  // );
-  await saveMemberBasicPDF(member, image);
+ipcMain.handle(ipcEvents.GET_MEMBER_PAYMENT, async (_event, id: string) => {
+  const memberPayment = await db.memberPayment.getMemberPaymentById(id);
+  return memberPayment;
 });
+
+/**
+ * A handler function to get all member payment
+ * @param {Object} queryData
+ * @returns {Object}
+ */
+ipcMain.handle(
+  ipcEvents.GET_MEMBER_PAYMENTS,
+  async (_event, data: IMemberPaymentQuery) => {
+    const res = await db.memberPayment.getMemberPayments(data);
+    return res;
+  }
+);
+
+/**
+ * A handler function to create a member payment
+ * @param {Object} data
+ * @returns {Object}
+ */
+ipcMain.handle(
+  ipcEvents.CREATE_MEMBER_PAYMENT,
+  async (_event, data: IMemberPayment) => {
+    const memberPayment = await db.memberPayment.createMemberPayment(data);
+    return memberPayment;
+  }
+);
+
+/**
+ * A handler function to update a member payment
+ * @param {string} data.id - id of the member payment to update
+ * @param {Object} data.data - data of the member payment to update
+ * @returns {Object}
+ */
+ipcMain.handle(
+  ipcEvents.UPDATE_MEMBER_PAYMENT,
+  async (_event, { id, data }: { id: string; data: unknown }) => {
+    const memberPayment = await db.memberPayment.updateMemberPayment(id, data);
+    return memberPayment;
+  }
+);

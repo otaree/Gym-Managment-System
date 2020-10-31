@@ -36,6 +36,10 @@ const DietPlan: React.FC<{
   showActions = false,
 }) => {
   const [modalType, setModalType] = useState('');
+  const [modalDetails, setModalDetails] = useState({
+    type: '',
+    typeOfMeal: '',
+  });
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const mapMealName = (mealType: string) => {
@@ -68,6 +72,18 @@ const DietPlan: React.FC<{
     onUpdate();
   };
 
+  const onDelete = async (mealType: string) => {
+    const newDietPlan = Object.keys(dietPlan).reduce((acc, curr) => {
+      if (curr === mealType) return acc;
+      return { ...acc, [curr]: dietPlan[curr] };
+    }, {});
+    await ipcRenderer.invoke(ipcEvents.UPDATE_MEMBER, {
+      id,
+      data: { dietPlan: newDietPlan },
+    });
+    onUpdate();
+  };
+
   return (
     <Box p={4}>
       {showActions && (
@@ -78,7 +94,7 @@ const DietPlan: React.FC<{
             size="md"
             variantColor="green"
             onClick={() => {
-              setModalType('add');
+              setModalDetails({ type: 'add', typeOfMeal: '' });
               onOpen();
             }}
           />
@@ -107,7 +123,7 @@ const DietPlan: React.FC<{
                       variantColor="purple"
                       aria-label="edit"
                       onClick={() => {
-                        setModalType('edit');
+                        setModalDetails({ type: 'edit', typeOfMeal: meal });
                         onOpen();
                       }}
                     />
@@ -117,6 +133,7 @@ const DietPlan: React.FC<{
                       variant="ghost"
                       variantColor="red"
                       aria-label="delete"
+                      onClick={() => onDelete(meal)}
                     />
                   </Stack>
                 )}
@@ -156,11 +173,15 @@ const DietPlan: React.FC<{
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>
-            {modalType === 'edit' ? 'Edit Meal' : 'Add Meal'}
+            {modalDetails.type === 'edit' ? 'Edit Meal' : 'Add Meal'}
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <DietPlanForm onSubmit={onSubmit} />
+            <DietPlanForm
+              onSubmit={onSubmit}
+              mealType={modalDetails.typeOfMeal}
+              planedMeals={dietPlan[modalDetails.typeOfMeal] || []}
+            />
           </ModalBody>
         </ModalContent>
       </Modal>
