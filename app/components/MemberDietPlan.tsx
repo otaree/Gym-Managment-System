@@ -35,7 +35,6 @@ const DietPlan: React.FC<{
   columns = 3,
   showActions = false,
 }) => {
-  const [modalType, setModalType] = useState('');
   const [modalDetails, setModalDetails] = useState({
     type: '',
     typeOfMeal: '',

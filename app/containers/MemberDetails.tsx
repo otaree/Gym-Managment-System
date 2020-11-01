@@ -317,7 +317,9 @@ const MemberDetails = () => {
           </TabPanel>
           <TabPanel>
             <MonthlyPayment
+              id={id}
               monthlyPayments={member?.monthlyPayments as IMonthlyPayment[]}
+              onUpdate={fetchMember}
             />
           </TabPanel>
           <TabPanel>
