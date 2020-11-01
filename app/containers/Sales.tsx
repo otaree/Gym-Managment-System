@@ -1,28 +1,24 @@
 /* eslint-disable no-underscore-dangle */
 import React, { useEffect, useState } from 'react';
 import { ipcRenderer } from 'electron';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { useHistory } from 'react-router';
 import {
   Box,
   Heading,
   Flex,
-  InputGroup,
-  InputLeftElement,
   Input,
-  Icon,
   Text,
   IconButton,
-  Tag,
-  TagLabel,
   Stack,
   Select,
-  Button,
   Spinner,
 } from '@chakra-ui/core';
+import DatePicker, { DayValue } from 'react-modern-calendar-datepicker';
 
 import Pagination from '../components/TablePagination';
-import { ISaleProduct, ISale, ISaleDocument, ISaleQuery } from '../db';
+import { ISaleDocument, ISaleQuery } from '../db';
+import urlParser from '../utils/urlParser';
 import ipcEvents from '../constants/ipcEvents.json';
 
 const Sales = () => {
@@ -31,14 +27,21 @@ const Sales = () => {
   const [query, setQuery] = useState<{
     limit: number;
     skip: number;
+    startDate: Date | null;
+    endDate: Date | null;
   }>({
     limit: 10,
     skip: 0,
+    startDate: null,
+    endDate: null,
   });
   const [fetchingSales, setFetchingSales] = useState(false);
+  const [selectStartDate, setSelectStartDate] = useState<DayValue>();
+  const [selectEndDate, setSelectEndDate] = useState<DayValue>();
   const history = useHistory();
 
   const fetchSales = async (saleQuery: ISaleQuery) => {
+    console.log('QUERY:::', saleQuery);
     setFetchingSales(true);
     const res = await ipcRenderer.invoke(ipcEvents.GET_SALES, saleQuery);
     setSales(res.sales);
@@ -46,21 +49,123 @@ const Sales = () => {
     setFetchingSales(false);
   };
 
+  const zeroPad = (num: number): string =>
+    Number(num) < 10 ? `0${num}` : `${num}`;
+
   useEffect(() => {
     const queryPrepaid: ISaleQuery = {
       limit: query.limit,
       skip: query.skip,
     };
 
+    if (query.startDate) {
+      queryPrepaid.startDate = query.startDate;
+    }
+
+    if (query.endDate) {
+      queryPrepaid.endDate = query.endDate;
+    }
+
     fetchSales(queryPrepaid);
-  }, [query, query.limit, query.skip]);
+  }, [query, query.limit, query.skip, query.startDate, query.endDate]);
+
+  useEffect(() => {
+    const parsedQuery: any = urlParser(history.location.search);
+    console.log('SALES_QUERY:::', parsedQuery);
+    const newQuery: {
+      limit: number;
+      skip: number;
+      startDate: Date | null;
+      endDate: Date | null;
+    } = {
+      limit: 10,
+      skip: 0,
+      startDate: null,
+      endDate: null,
+    };
+    if (parsedQuery.limit && Number.isInteger(Number(parsedQuery.limit))) {
+      newQuery.limit = Number(parsedQuery.limit);
+    }
+    if (parsedQuery.skip && Number.isInteger(Number(parsedQuery.skip))) {
+      newQuery.skip = Number(parsedQuery.skip);
+    }
+    // if (parsedQuery.startDate && parseISO(parsedQuery.startDate)) {
+    //   const date = parseISO(parsedQuery.startDate)
+    //   newQuery.startDate = date;
+    // }
+    // if (parsedQuery.endDate && parseISO(parsedQuery.endDate)) {
+    //   newQuery.endDate = parseISO(parsedQuery.endDate);
+    // }
+    setQuery({ ...query, ...newQuery });
+  }, [history.location.search]);
 
   return (
     <Box>
       <Heading>Sales</Heading>
       <Flex flexDirection="column" mt={4}>
         <Flex justifyContent="flex-end">
-          <Box>
+          <Stack isInline>
+            <DatePicker
+              value={selectStartDate}
+              onChange={(value) => {
+                setSelectStartDate(value);
+                if (value) {
+                  setQuery({
+                    ...query,
+                    startDate: new Date(value.year, value.month - 1, value.day),
+                  });
+                }
+              }}
+              renderInput={({ ref }) => {
+                return (
+                  <Input
+                    ref={ref as React.RefObject<HTMLInputElement>}
+                    placeholder="Start End"
+                    onChange={() => {}}
+                    value={
+                      selectStartDate
+                        ? `${zeroPad(selectStartDate?.day)}/${zeroPad(
+                            selectStartDate?.month
+                          )}/${selectStartDate?.year}`
+                        : ''
+                    }
+                  />
+                );
+              }} // render a custom input
+              shouldHighlightWeekends
+              calendarPopperPosition="bottom"
+            />
+            <DatePicker
+              value={selectEndDate}
+              onChange={(value) => {
+                setSelectEndDate(value);
+                if (value) {
+                  setQuery({
+                    ...query,
+                    endDate: new Date(value.year, value.month - 1, value.day),
+                  });
+                }
+              }}
+              renderInput={({ ref }) => {
+                return (
+                  <Input
+                    ml={2}
+                    ref={ref as React.RefObject<HTMLInputElement>}
+                    placeholder="End Date"
+                    onChange={() => {}}
+                    value={
+                      selectEndDate
+                        ? `${zeroPad(selectEndDate?.day)}/${zeroPad(
+                            selectEndDate?.month
+                          )}/${selectEndDate?.year}`
+                        : ''
+                    }
+                  />
+                );
+              }} // render a custom input
+              shouldHighlightWeekends
+              calendarPopperPosition="bottom"
+            />
             <Select
               placeholder="Limit"
               ml={4}
@@ -82,7 +187,7 @@ const Sales = () => {
               <option value="20">20</option>
               <option value="30">30</option>
             </Select>
-          </Box>
+          </Stack>
         </Flex>
 
         <Box pos="relative">
@@ -139,7 +244,17 @@ const Sales = () => {
                         aria-label="view"
                         variant="ghost"
                         variantColor="purple"
-                        onClick={() => history.push(`/sales/${sale._id}`)}
+                        onClick={() => {
+                          history.push(
+                            `/sales/${sale._id}?limit=${query.limit}&skip=${
+                              query.skip
+                            }&startDate=${
+                              query.startDate && query.startDate.toISOString()
+                            }&endDate=${
+                              query.endDate && query.endDate.toISOString()
+                            }`
+                          );
+                        }}
                       />
                     </Flex>
                   </Box>

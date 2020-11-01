@@ -69,7 +69,7 @@ const PrepaidDetails = () => {
 
   return (
     <Box backgroundColor="gray.50">
-      <BackButton />
+      <BackButton url={`/prepaid/all${history.location.search}`} />
       <Flex justifyContent="space-between" mb={4}>
         <Stack isInline>
           <Heading textTransform="capitalize">

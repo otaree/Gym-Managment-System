@@ -75,7 +75,6 @@ const MemberDetails = () => {
   };
 
   const fetchMember = useCallback(async () => {
-    console.log('FETCH_MEMBER!!!');
     // const isAuth = await ipcRenderer.invoke(ipcEvents.STAFF_LOGIN, data);
     setIsFetching(true);
     const resMember: IMemberDocument = await ipcRenderer.invoke(
@@ -118,7 +117,7 @@ const MemberDetails = () => {
 
   return (
     <Box backgroundColor="gray.50">
-      <BackButton />
+      <BackButton url={`/members${history.location.search}`} />
       <Flex justifyContent="space-between" mb={4}>
         <Stack isInline>
           <Heading textTransform="capitalize">

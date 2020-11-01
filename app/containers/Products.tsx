@@ -26,6 +26,7 @@ import {
   removeProduct,
 } from '../features/cart/cartSlice';
 import { IProductDocument, IProductQuery } from '../db';
+import urlParser from '../utils/urlParser';
 import ipcEvents from '../constants/ipcEvents.json';
 
 const Products = () => {
@@ -66,6 +67,25 @@ const Products = () => {
 
     fetchProducts(queryPrepaid);
   }, [query, query.limit, query.skip, query.search]);
+
+  useEffect(() => {
+    const parsedQuery: any = urlParser(history.location.search);
+    const newQuery = {
+      limit: 10,
+      skip: 0,
+      search: '',
+    };
+    if (parsedQuery.limit && Number.isInteger(Number(parsedQuery.limit))) {
+      newQuery.limit = Number(parsedQuery.limit);
+    }
+    if (parsedQuery.skip && Number.isInteger(Number(parsedQuery.skip))) {
+      newQuery.skip = Number(parsedQuery.skip);
+    }
+    if (parsedQuery.search) {
+      newQuery.search = parsedQuery.search;
+    }
+    setQuery({ ...query, ...newQuery });
+  }, [history.location.search]);
 
   const inCart = (id: string) => {
     const product = cart.find((item) => item.product._id === id);
@@ -187,7 +207,9 @@ const Products = () => {
                         variant="ghost"
                         variantColor="purple"
                         onClick={() => {
-                          history.push(`/products/${product._id}`);
+                          history.push(
+                            `/products/${product._id}?limit=${query.limit}&skip=${query.skip}&search=${query.search}`
+                          );
                         }}
                       />
                       {inCart(product._id!) ? (

@@ -24,6 +24,7 @@ import {
 import Pagination from '../components/TablePagination';
 import { IPrepaidDocument } from '../db';
 import { IPrepaidQuery } from '../main.dev';
+import urlParser from '../utils/urlParser';
 import ipcEvents from '../constants/ipcEvents.json';
 
 const AllPrepaid = () => {
@@ -65,6 +66,25 @@ const AllPrepaid = () => {
 
     fetchAllPrepaid(queryPrepaid);
   }, [query, query.limit, query.skip, query.search]);
+
+  useEffect(() => {
+    const parsedQuery: any = urlParser(history.location.search);
+    const newQuery = {
+      limit: 10,
+      skip: 0,
+      search: '',
+    };
+    if (parsedQuery.limit && Number.isInteger(Number(parsedQuery.limit))) {
+      newQuery.limit = Number(parsedQuery.limit);
+    }
+    if (parsedQuery.skip && Number.isInteger(Number(parsedQuery.skip))) {
+      newQuery.skip = Number(parsedQuery.skip);
+    }
+    if (parsedQuery.search) {
+      newQuery.search = parsedQuery.search;
+    }
+    setQuery({ ...query, ...newQuery });
+  }, [history.location.search]);
 
   return (
     <Box>
@@ -195,7 +215,11 @@ const AllPrepaid = () => {
                         aria-label="view"
                         variant="ghost"
                         variantColor="purple"
-                        onClick={() => history.push(`/prepaid/${prepaid._id}`)}
+                        onClick={() => {
+                          history.push(
+                            `/prepaid/${prepaid._id}?limit=${query.limit}&skip=${query.skip}&search=${query.search}`
+                          );
+                        }}
                       />
                     </Flex>
                   </Box>

@@ -64,7 +64,7 @@ const ProductDetails = () => {
 
   return (
     <Box backgroundColor="gray.50">
-      <BackButton />
+      <BackButton url={`/products${history.location.search}`} />
       <Flex justifyContent="space-between" mb={4}>
         <Heading textTransform="capitalize">{product?.name}</Heading>
         <ButtonGroup>

@@ -109,6 +109,11 @@ export default function methods(filepath: string) {
         });
     });
 
+  const getMembersCount = async (): Promise<number> => {
+    const count = await db.asyncCount({});
+    return count as number;
+  };
+
   const createMember = async (data: IMember) => {
     const memberId = await generateMemberId();
     const isIdPresent = await db.asyncFindOne({ memberId });
@@ -140,6 +145,7 @@ export default function methods(filepath: string) {
   return {
     getMember,
     getMembers,
+    getMembersCount,
     createMember,
     updateMember,
     deleteMember,

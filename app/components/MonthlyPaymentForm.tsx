@@ -34,15 +34,18 @@ const MonthlyPaymentPaymentForm: React.FC<{
   onSubmitted: (value: IMonthlyPayment) => void;
   paymentDetails?: IMonthlyPayment;
 }> = ({ onSubmitted, paymentDetails }) => {
-  const [selectedDate, setSelectedDate] = useState<DayValue>();
+  const [selectedDate, setSelectedDate] = useState<DayValue>(
+    paymentDetails
+      ? {
+          day: paymentDetails.date.getDate(),
+          month: paymentDetails.date.getMonth() + 1,
+          year: paymentDetails.date.getFullYear(),
+        }
+      : null
+  );
 
   let defaultValues = {};
   if (paymentDetails) {
-    setSelectedDate({
-      day: paymentDetails.date.getDate(),
-      month: paymentDetails.date.getMonth() + 1,
-      year: paymentDetails.date.getFullYear(),
-    });
     defaultValues = {
       date: {
         day: paymentDetails.date.getDate(),

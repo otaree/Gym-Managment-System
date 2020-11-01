@@ -21,10 +21,12 @@ import {
   Button,
   Spinner,
 } from '@chakra-ui/core';
+import { FaFileCsv } from 'react-icons/fa';
 
 import Pagination from '../components/TablePagination';
 import { IMemberDocument } from '../db';
 import { IMembersQuery } from '../main.dev';
+import urlParser from '../utils/urlParser';
 import ipcEvents from '../constants/ipcEvents.json';
 
 const Members = () => {
@@ -54,6 +56,15 @@ const Members = () => {
     setTotalCount(res.totalCount);
     setFetchingMembers(false);
   };
+
+  const downloadCSV = async () => {
+    await ipcRenderer.invoke(ipcEvents.CSV_MEMBERS);
+  };
+
+  const hasPaymentDue = (member: IMemberDocument): boolean =>
+    member.monthlyPayments &&
+    member.monthlyPayments.filter((monthPayment) => !monthPayment.paid).length >
+      0;
 
   useEffect(() => {
     const queryMembers: IMembersQuery = {
@@ -85,6 +96,33 @@ const Members = () => {
     query.paymentDue,
     query.search,
   ]);
+
+  useEffect(() => {
+    const parsedQuery: any = urlParser(history.location.search);
+    const newQuery = {
+      limit: 10,
+      skip: 0,
+      isMember: '',
+      search: '',
+      paymentDue: '',
+    };
+    if (parsedQuery.limit && Number.isInteger(Number(parsedQuery.limit))) {
+      newQuery.limit = Number(parsedQuery.limit);
+    }
+    if (parsedQuery.skip && Number.isInteger(Number(parsedQuery.skip))) {
+      newQuery.skip = Number(parsedQuery.skip);
+    }
+    if (parsedQuery.isMember) {
+      newQuery.isMember = parsedQuery.isMember;
+    }
+    if (parsedQuery.paymentDue) {
+      newQuery.paymentDue = parsedQuery.paymentDue;
+    }
+    if (parsedQuery.search) {
+      newQuery.search = parsedQuery.search;
+    }
+    setQuery({ ...query, ...newQuery });
+  }, [history.location.search]);
 
   return (
     <Box>
@@ -165,6 +203,16 @@ const Members = () => {
             </Select>
             <Button
               ml={4}
+              leftIcon={FaFileCsv}
+              variantColor="green"
+              aria-label="Add member"
+              borderRadius="0"
+              onClick={downloadCSV}
+            >
+              CSV
+            </Button>
+            <Button
+              ml={4}
               leftIcon="add"
               variantColor="purple"
               aria-label="Add member"
@@ -226,17 +274,25 @@ const Members = () => {
                   </Text>
                   <Box as="td">
                     <Flex justifyContent="center">
-                      {/* <Tag size="sm" variantColor="green" variant="solid" rounded="full">
-                      <TagLabel>None</TagLabel>
-                    </Tag> */}
-                      <Tag
-                        size="sm"
-                        variantColor="red"
-                        variant="solid"
-                        rounded="full"
-                      >
-                        <TagLabel>Due</TagLabel>
-                      </Tag>
+                      {hasPaymentDue(member) ? (
+                        <Tag
+                          size="sm"
+                          variantColor="red"
+                          variant="solid"
+                          rounded="full"
+                        >
+                          <TagLabel>Due</TagLabel>
+                        </Tag>
+                      ) : (
+                        <Tag
+                          size="sm"
+                          variantColor="green"
+                          variant="solid"
+                          rounded="full"
+                        >
+                          <TagLabel>None</TagLabel>
+                        </Tag>
+                      )}
                     </Flex>
                   </Box>
                   <Box as="td">
@@ -269,7 +325,9 @@ const Members = () => {
                         variant="ghost"
                         variantColor="purple"
                         onClick={() => {
-                          history.push(`/members/${member._id}/details`);
+                          history.push(
+                            `/members/${member._id}/details?skip=${query.skip}&limit=${query.limit}&isMember=${query.isMember}&paymentDue=${query.paymentDue}&search=${query.search}`
+                          );
                         }}
                       />
                     </Flex>

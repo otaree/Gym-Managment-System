@@ -19,8 +19,6 @@ import { IProduct, IProductDocument } from './model/product';
 import product, { IProductQuery } from './method/product';
 import { ISaleProduct, ISale, ISaleDocument } from './model/sale';
 import sale, { ISaleQuery } from './method/sale';
-import { IMemberPayment, IMemberPaymentDocument } from './model/memberPayment';
-import memberPayment, { IMemberPaymentQuery } from './method/memberPayment';
 
 export {
   IMember,
@@ -42,9 +40,6 @@ export {
   ISaleQuery,
   DayOfWeek,
   TypeOfMeal,
-  IMemberPayment,
-  IMemberPaymentDocument,
-  IMemberPaymentQuery,
 };
 
 export default (appPath: string) => {
@@ -54,6 +49,5 @@ export default (appPath: string) => {
     prepaid: prepaid(appPath),
     product: product(appPath),
     sale: sale(appPath),
-    memberPayment: memberPayment(appPath),
   };
 };

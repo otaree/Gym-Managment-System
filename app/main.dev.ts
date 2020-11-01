@@ -28,8 +28,6 @@ import initializeDB, {
   IProduct,
   IProductDocument,
   IProductQuery,
-  IMemberPaymentQuery,
-  IMemberPayment,
 } from './db';
 import ipcEvents from './constants/ipcEvents.json';
 import { ISaleProduct } from './db/model/sale';
@@ -482,51 +480,30 @@ ipcMain.handle(ipcEvents.PDF_SALES, async (_event, id: string) => {
 });
 
 /**
- * A handler function to get a member payment
- * @param {string} id- id of the member payment.
- * @returns {Object}
+ * A handler function to save csv file of member
+ * @param {string} queryData
  */
-ipcMain.handle(ipcEvents.GET_MEMBER_PAYMENT, async (_event, id: string) => {
-  const memberPayment = await db.memberPayment.getMemberPaymentById(id);
-  return memberPayment;
+ipcMain.handle(ipcEvents.CSV_MEMBERS, async (_event) => {
+  const writeStream = fs.createWriteStream(
+    path.join(
+      app.getPath('documents'),
+      `members_${new Date().getDate()}-${new Date().getMonth()}-${new Date().getFullYear()}.csv`
+    )
+  );
+
+  writeStream.write('name,sex,phone No\n', 'utf-8');
+  const count = await db.member.getMembersCount();
+
+  for (let i = 0; i < count; i += 100) {
+    // eslint-disable-next-line no-await-in-loop
+    const { members } = await db.member.getMembers({ limit: 100, skip: i });
+    members.forEach((member) => {
+      writeStream.write(
+        `${member.firstName} ${member.lastName},${member.sex},${member.phoneNo}\n`,
+        'utf-8'
+      );
+    });
+  }
+  writeStream.end();
+  console.log('DONE!!!');
 });
-
-/**
- * A handler function to get all member payment
- * @param {Object} queryData
- * @returns {Object}
- */
-ipcMain.handle(
-  ipcEvents.GET_MEMBER_PAYMENTS,
-  async (_event, data: IMemberPaymentQuery) => {
-    const res = await db.memberPayment.getMemberPayments(data);
-    return res;
-  }
-);
-
-/**
- * A handler function to create a member payment
- * @param {Object} data
- * @returns {Object}
- */
-ipcMain.handle(
-  ipcEvents.CREATE_MEMBER_PAYMENT,
-  async (_event, data: IMemberPayment) => {
-    const memberPayment = await db.memberPayment.createMemberPayment(data);
-    return memberPayment;
-  }
-);
-
-/**
- * A handler function to update a member payment
- * @param {string} data.id - id of the member payment to update
- * @param {Object} data.data - data of the member payment to update
- * @returns {Object}
- */
-ipcMain.handle(
-  ipcEvents.UPDATE_MEMBER_PAYMENT,
-  async (_event, { id, data }: { id: string; data: unknown }) => {
-    const memberPayment = await db.memberPayment.updateMemberPayment(id, data);
-    return memberPayment;
-  }
-);
