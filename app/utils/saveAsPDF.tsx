@@ -33,6 +33,5 @@ export async function saveMemberBasicPDF(
     <MemberBasic member={member} image={image} />,
     filepath
   );
-  const hasOpened = shell.openItem(filepath);
-  console.log(hasOpened ? 'OPEN' : 'NOT OPEN');
+  shell.openItem(filepath);
 }

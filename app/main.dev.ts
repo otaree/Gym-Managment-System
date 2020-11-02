@@ -13,13 +13,14 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 import path from 'path';
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import shortid from 'shortid';
 import fs from 'fs';
+import { format } from 'date-fns';
 
-import MenuBuilder from './menu';
+// import MenuBuilder from './menu';
 // eslint-disable-next-line import/no-cycle
 import initializeDB, {
   IMember,
@@ -33,8 +34,9 @@ import ipcEvents from './constants/ipcEvents.json';
 import { ISaleProduct } from './db/model/sale';
 import { ISaleQuery } from './db/method/sale';
 import { saveSaleReceiptPDF } from './utils/saveAsPDF';
+import calculateAge from './utils/calculateAge';
 
-const appPath = path.join(app.getPath('userData'), 'gymvenger');
+const appPath = path.join(app.getPath('appData'), 'gymvenger');
 
 if (!fs.existsSync(appPath)) {
   fs.mkdirSync(appPath);
@@ -92,8 +94,10 @@ const createWindow = async () => {
 
   mainWindow = new BrowserWindow({
     show: false,
-    width: 1024,
-    height: 728,
+    // width: 1024,
+    // height: 728,
+    minWidth: 1024,
+    minHeight: 728,
     icon: getAssetPath('icon.png'),
     webPreferences:
       (process.env.NODE_ENV === 'development' ||
@@ -127,8 +131,9 @@ const createWindow = async () => {
     mainWindow = null;
   });
 
-  const menuBuilder = new MenuBuilder(mainWindow);
-  menuBuilder.buildMenu();
+  mainWindow.setMenuBarVisibility(false);
+  // const menuBuilder = new MenuBuilder(mainWindow);
+  // menuBuilder.buildMenu();
 
   // Remove this if your app does not use auto updates
   // eslint-disable-next-line
@@ -483,27 +488,60 @@ ipcMain.handle(ipcEvents.PDF_SALES, async (_event, id: string) => {
  * A handler function to save csv file of member
  * @param {string} queryData
  */
-ipcMain.handle(ipcEvents.CSV_MEMBERS, async (_event) => {
-  const writeStream = fs.createWriteStream(
-    path.join(
-      app.getPath('documents'),
-      `members_${new Date().getDate()}-${new Date().getMonth()}-${new Date().getFullYear()}.csv`
-    )
+ipcMain.handle(ipcEvents.CSV_MEMBERS, async () => {
+  const filepath = path.join(
+    app.getPath('documents'),
+    `members_${new Date().getDate()}-${new Date().getMonth()}-${new Date().getFullYear()}_${shortid.generate()}.csv`
   );
 
-  writeStream.write('name,sex,phone No\n', 'utf-8');
+  const writeStream = fs.createWriteStream(filepath);
+
+  writeStream.write(
+    'First Name,Last Name,D.O.B,Age,Sex,Occupation,Email,Phone no.,Address,Regular exercise,Injuries,Goal/Target,How did your hear about the club?,Prescribed Medication,"Pregnant (If so, due date)",Given birth in  the last 6 months,Dieting/Fasting,Hospitalised Recently,Have blood Pressure\n',
+    'utf-8'
+  );
   const count = await db.member.getMembersCount();
 
   for (let i = 0; i < count; i += 100) {
     // eslint-disable-next-line no-await-in-loop
     const { members } = await db.member.getMembers({ limit: 100, skip: i });
     members.forEach((member) => {
+      let pregnant = '';
+      if (member.pregnant?.isPregnant) {
+        pregnant = 'Yes';
+        if (member.pregnant.dueDate) {
+          pregnant += ` (${format(member.pregnant.dueDate, 'dd/mm/yyyy')})`;
+        }
+      }
+
       writeStream.write(
-        `${member.firstName} ${member.lastName},${member.sex},${member.phoneNo}\n`,
+        [
+          member.firstName,
+          member.lastName,
+          format(member.dob, 'dd/mm/yyyy'),
+          calculateAge(member.dob),
+          member.sex,
+          member.occupation,
+          member.email,
+          member.phoneNo,
+          member.address,
+          member.regularExercise,
+          member.injuries,
+          member.goal,
+          member.heardAboutClub,
+          member.prescribedMedication,
+          pregnant,
+          member.givenBirth6Month ? 'Yes' : 'No',
+          member.dieting ? 'Yes' : 'No',
+          member.hospitalisedRecently ? 'Yes' : 'No',
+          member.highBloodPressure ? 'Yes' : 'No',
+        ]
+          .join(',')
+          .concat('\n'),
         'utf-8'
       );
     });
   }
   writeStream.end();
-  console.log('DONE!!!');
+  shell.showItemInFolder(filepath);
 });

@@ -17,7 +17,7 @@ const AddMemberForm = () => {
 
   const onSubmit = async (data: unknown) => {
     await ipcRenderer.invoke(ipcEvents.UPDATE_MEMBER, { id, data });
-    history.push(`/members/${id}`);
+    history.goBack();
   };
 
   useEffect(() => {

@@ -47,6 +47,7 @@ const Members = () => {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [fetchingMembers, setFetchingMembers] = useState(false);
+  const [buildingCSV, setBuildingCSV] = useState(false);
   const history = useHistory();
 
   const fetchMembers = async (queryMembers: IMembersQuery) => {
@@ -58,7 +59,9 @@ const Members = () => {
   };
 
   const downloadCSV = async () => {
+    setBuildingCSV(true);
     await ipcRenderer.invoke(ipcEvents.CSV_MEMBERS);
+    setBuildingCSV(false);
   };
 
   const hasPaymentDue = (member: IMemberDocument): boolean =>
@@ -208,6 +211,8 @@ const Members = () => {
               aria-label="Add member"
               borderRadius="0"
               onClick={downloadCSV}
+              isLoading={buildingCSV}
+              isDisabled={buildingCSV}
             >
               CSV
             </Button>
