@@ -22,6 +22,9 @@ import Sales from './containers/Sales';
 import SaleDetail from './containers/SaleDetails';
 import Cart from './containers/Cart';
 import Employees from './containers/Employees';
+import EmployeeDetails from './containers/EmployeeDetails';
+import AddEmployee from './containers/AddEmployee';
+import EditEmployee from './containers/EditEmployee';
 import WithAside from './components/WithAside';
 import { selectAuthentic } from './features/auth/authSlice';
 
@@ -232,6 +235,45 @@ export default function Routes() {
             return authentic ? (
               <WithAside>
                 <Employees />
+              </WithAside>
+            ) : (
+              <LoginPage />
+            );
+          }}
+          exact
+        />
+        <Route
+          path="/employees/add"
+          render={() => {
+            return authentic ? (
+              <WithAside>
+                <AddEmployee />
+              </WithAside>
+            ) : (
+              <LoginPage />
+            );
+          }}
+          exact
+        />
+        <Route
+          path="/employees/:id"
+          render={() => {
+            return authentic ? (
+              <WithAside>
+                <EmployeeDetails />
+              </WithAside>
+            ) : (
+              <LoginPage />
+            );
+          }}
+          exact
+        />
+        <Route
+          path="/employees/:id/edit"
+          render={() => {
+            return authentic ? (
+              <WithAside>
+                <EditEmployee />
               </WithAside>
             ) : (
               <LoginPage />

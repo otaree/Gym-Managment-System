@@ -5,12 +5,14 @@ export interface IEmployee {
   firstName: string;
   lastName: string;
   dob: Date;
+  sex: string;
   address: string;
   mobile: string;
 }
 
 export interface IEmployeeDocument extends IEmployee {
   _id?: string;
+  isEmployed: boolean;
   createdAt: Date;
   leavingDate?: Date;
 }

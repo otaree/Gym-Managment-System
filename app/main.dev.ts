@@ -582,7 +582,14 @@ ipcMain.handle(ipcEvents.CSV_MEMBERS, async () => {
  * @returns {Object}
  */
 ipcMain.handle(ipcEvents.CREATE_EMPLOYEE, async (_event, data: IEmployee) => {
-  const employee = await db.employee.createEmployee(data);
+  const filepath = path.join(
+    appPath,
+    `${data.firstName}_${shortid.generate()}.png`
+  );
+  const base64Data = data.img.split(';base64,').pop();
+
+  fs.writeFileSync(filepath, base64Data, { encoding: 'base64' });
+  const employee = await db.employee.createEmployee({ ...data, img: filepath });
   return employee;
 });
 
@@ -655,15 +662,24 @@ ipcMain.handle(ipcEvents.GET_EMPLOYEES, async () => {
 // seed
 // const seed = async () => {
 //   try {
-//     const { members } = await db.member.getMembers({ limit: 1000 });
+//     // const { members } = await db.member.getMembers({ limit: 1000 });
+//     // await Promise.all(
+//     //   members.map((member) =>
+//     //     db.member.updateMember(member._id!, {
+//     //       memberShipExpirationDate: new Date(
+//     //         member.createdAt.getFullYear() + 1,
+//     //         member.createdAt.getMonth(),
+//     //         member.createdAt.getDate()
+//     //       ),
+//     //     })
+//     //   )
+//     // );
+//     const employees = await db.employee.getEmployees();
 //     await Promise.all(
-//       members.map((member) =>
-//         db.member.updateMember(member._id!, {
-//           memberShipExpirationDate: new Date(
-//             member.createdAt.getFullYear() + 1,
-//             member.createdAt.getMonth(),
-//             member.createdAt.getDate()
-//           ),
+//       employees.map((employee) =>
+//         db.employee.updateEmployee(employee._id!, {
+//           isEmployed: true,
+//           sex: Math.random() > 0.5 ? 'male' : 'female',
 //         })
 //       )
 //     );

@@ -24,6 +24,7 @@ export default function methods(filepath: string) {
   ): Promise<IEmployeeDocument> => {
     const employee = await db.asyncInsert({
       ...data,
+      isEmployed: true,
       createdAt: new Date(),
     });
     return employee;
