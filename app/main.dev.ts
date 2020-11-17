@@ -29,6 +29,8 @@ import initializeDB, {
   IProduct,
   IProductDocument,
   IProductQuery,
+  IEmployee,
+  IEmployeeDocument,
 } from './db';
 import ipcEvents from './constants/ipcEvents.json';
 import { ISaleProduct } from './db/model/sale';
@@ -110,6 +112,8 @@ const createWindow = async () => {
             preload: path.join(__dirname, 'dist/renderer.prod.js'),
           },
   });
+
+  mainWindow.maximize();
 
   mainWindow.loadURL(`file://${__dirname}/app.html`);
 
@@ -251,6 +255,32 @@ ipcMain.handle(
   ipcEvents.UPDATE_MEMBER,
   async (_event, { id, data }: { id: string; data: unknown }) => {
     const member = await db.member.updateMember(id, data);
+    return member;
+  }
+);
+
+/**
+ * A handler function to update member monthly payments
+ * @param {Object} data - event handler argument
+ * @param {string} data.id - id of the member
+ * @param {Object} data.data - data of members to be update
+ * @returns {Object}
+ */
+ipcMain.handle(
+  ipcEvents.UPDATE_MEMBER_MONTHLY_PAYMENT,
+  async (
+    _event,
+    {
+      id,
+      data,
+    }: { id: string; data: { date: Date; amount: number; paid: boolean } }
+  ) => {
+    const member = await db.member.updateMemberPayment(
+      id,
+      data.date,
+      data.amount,
+      data.paid
+    );
     return member;
   }
 );
@@ -545,3 +575,102 @@ ipcMain.handle(ipcEvents.CSV_MEMBERS, async () => {
   writeStream.end();
   shell.showItemInFolder(filepath);
 });
+
+/**
+ * A handler function to create employee
+ * @param {Object} data.
+ * @returns {Object}
+ */
+ipcMain.handle(ipcEvents.CREATE_EMPLOYEE, async (_event, data: IEmployee) => {
+  const employee = await db.employee.createEmployee(data);
+  return employee;
+});
+
+/**
+ * A handler function to update employee
+ * @param {string} data.id - string of the employee.
+ * @param {Object} data.data - object containing all field to update.
+ * @returns {Object}
+ */
+ipcMain.handle(
+  ipcEvents.UPDATE_EMPLOYEE,
+  async (_event, { id, data }: { id: string; data: unknown }) => {
+    const employee = await db.employee.updateEmployee(id, data);
+    return employee;
+  }
+);
+
+/**
+ * A handler function to delete employee
+ * @param {string} id - id of the employee.
+ * @returns {Object}
+ */
+ipcMain.handle(ipcEvents.DELETE_EMPLOYEE, async (_event, id: string) => {
+  const employee = await db.employee.deleteEmployee(id);
+  return employee;
+});
+
+/**
+ * A handler function to get employee
+ * @param {string} id - id of the employee.
+ * @returns {Object}
+ */
+ipcMain.handle(ipcEvents.GET_EMPLOYEE, async (_event, id: string) => {
+  const employee = await db.employee.getEmployee(id);
+  return employee;
+});
+
+/**
+ * A handler function to get employees
+ * @returns {Array}
+ */
+ipcMain.handle(ipcEvents.GET_EMPLOYEES, async () => {
+  const employees = await db.employee.getEmployees();
+  return employees;
+});
+
+// import faker from 'faker';
+// const populateEmployees = async () => {
+//   try {
+//     const employees = Array(30)
+//       .fill(0)
+//       .map(() => ({
+//         img: faker.internet.avatar(),
+//         firstName: faker.name.firstName(),
+//         lastName: faker.name.lastName(),
+//         dob: new Date(),
+//         address: faker.address.city(),
+//         mobile: '9876543210',
+//       }));
+//     await Promise.all(
+//       employees.map((employee) => db.employee.createEmployee(employee))
+//     );
+//     console.log('POPULATED!!!');
+//   } catch (error) {
+//     console.error('ERROR:::', error);
+//   }
+// };
+
+// populateEmployees();
+// seed
+// const seed = async () => {
+//   try {
+//     const { members } = await db.member.getMembers({ limit: 1000 });
+//     await Promise.all(
+//       members.map((member) =>
+//         db.member.updateMember(member._id!, {
+//           memberShipExpirationDate: new Date(
+//             member.createdAt.getFullYear() + 1,
+//             member.createdAt.getMonth(),
+//             member.createdAt.getDate()
+//           ),
+//         })
+//       )
+//     );
+//     console.log('POPULATED!!!');
+//   } catch (error) {
+//     console.error('ERROR:::', error);
+//   }
+// };
+
+// seed();

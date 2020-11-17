@@ -44,6 +44,7 @@ type FormData = {
   highBloodPressure: string;
   membershipFee?: number;
   isMember?: boolean;
+  memberShipExpirationDate?: DayValue;
   leavingDate?: DayValue;
 };
 
@@ -81,6 +82,17 @@ const MemberForm: React.FC<{
           day: member.leavingDate.getDate(),
           month: member.leavingDate.getMonth() + 1,
           year: member.leavingDate.getFullYear(),
+        }
+      : null
+  );
+  const [selectedExpirationDate, setSelectedExpirationDate] = useState<
+    DayValue
+  >(
+    isEdit && member?.memberShipExpirationDate
+      ? {
+          day: member.memberShipExpirationDate.getDate(),
+          month: member.memberShipExpirationDate.getMonth() + 1,
+          year: member.memberShipExpirationDate.getFullYear(),
         }
       : null
   );
@@ -125,6 +137,11 @@ const MemberForm: React.FC<{
         day: member.leavingDate.getDate(),
         month: member.leavingDate.getMonth() + 1,
         year: member.leavingDate.getFullYear(),
+      },
+      memberShipExpirationDate: member?.memberShipExpirationDate && {
+        day: member.memberShipExpirationDate.getDate(),
+        month: member.memberShipExpirationDate.getMonth() + 1,
+        year: member.memberShipExpirationDate.getFullYear(),
       },
     };
   }
@@ -195,6 +212,13 @@ const MemberForm: React.FC<{
             data.leavingDate.year,
             data.leavingDate.month - 1,
             data.leavingDate.day
+          );
+        }
+        if (data.memberShipExpirationDate) {
+          dataBody.memberShipExpirationDate = new Date(
+            data.memberShipExpirationDate.year,
+            data.memberShipExpirationDate.month - 1,
+            data.memberShipExpirationDate.day
           );
         }
       }
@@ -666,6 +690,49 @@ const MemberForm: React.FC<{
               />
               <FormErrorMessage>{errors?.isMember?.message}</FormErrorMessage>
             </FormControl>
+
+            <FormControl isInvalid={!!errors.memberShipExpirationDate} w="18%">
+              <FormLabel htmlFor="memberShipExpirationDate">
+                Membership Expiration date:
+              </FormLabel>
+              <Controller
+                name="memberShipExpirationDate"
+                control={control}
+                render={(props) => (
+                  <DatePicker
+                    value={selectedExpirationDate}
+                    onChange={(value) => {
+                      // eslint-disable-next-line react/prop-types
+                      props.onChange(value);
+                      setSelectedExpirationDate(value);
+                    }}
+                    renderInput={({ ref }) => {
+                      return (
+                        <Input
+                          ref={ref as React.RefObject<HTMLInputElement>}
+                          placeholder="Leaving Date"
+                          value={
+                            selectedExpirationDate
+                              ? `${zeroPad(
+                                  selectedExpirationDate?.day
+                                )}/${zeroPad(selectedExpirationDate?.month)}/${
+                                  selectedExpirationDate?.year
+                                }`
+                              : ''
+                          }
+                        />
+                      );
+                    }} // render a custom input
+                    shouldHighlightWeekends
+                    calendarPopperPosition="top"
+                  />
+                )}
+              />
+              <FormErrorMessage>
+                {errors?.memberShipExpirationDate?.message}
+              </FormErrorMessage>
+            </FormControl>
+
             <FormControl isInvalid={!!errors.leavingDate} w="18%">
               <FormLabel htmlFor="leavingDate">Leaving Date</FormLabel>
               <Controller
@@ -699,7 +766,9 @@ const MemberForm: React.FC<{
                   />
                 )}
               />
-              <FormErrorMessage>{errors?.dob?.message}</FormErrorMessage>
+              <FormErrorMessage>
+                {errors?.leavingDate?.message}
+              </FormErrorMessage>
             </FormControl>
           </>
         )}

@@ -95,9 +95,11 @@ export interface IMemberDocument extends IMember {
   dietPlan: IDietPlan;
   monthlyPayments: IMonthlyPayment[];
   products: IMemberProduct[];
+  memberShipExpirationDate: Date;
   leavingDate?: Date;
   isMember: boolean;
   memberId: string;
+  hasPaymentDue: boolean;
   createdAt: Date;
 }
 

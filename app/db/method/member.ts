@@ -41,11 +41,13 @@ export default function methods(filepath: string) {
 
   interface IQuery {
     isMember?: boolean;
-    memberId?: string;
+    // memberId?: string;
+    memberId?: { $regex: RegExp };
     $or?: [{ firstName: { $regex: RegExp } }, { lastName: { $regex: RegExp } }];
     firstName?: { $regex: RegExp };
     lastName?: { $regex: RegExp };
     monthlyPayments?: { $elemMatch: { paid: boolean } };
+    hasPaymentDue?: boolean;
   }
   const getMembers = ({
     limit = 10,
@@ -62,7 +64,7 @@ export default function methods(filepath: string) {
     search?: string;
     paymentDue?: boolean;
   }): Promise<{ members: IMemberDocument[]; totalCount: number }> =>
-    new Promise((resolve, reject) => {
+    new Promise((resolve, reject): void => {
       const parsedSort = sort
         .split(',')
         .map((el) => (el.startsWith('-') ? [el.substring(1), -1] : [el, 1]))
@@ -70,7 +72,8 @@ export default function methods(filepath: string) {
       const query: IQuery = {};
       if (search) {
         if (search.startsWith(config.gymAB)) {
-          query.memberId = search.trim().toUpperCase();
+          // query.memberId = search.trim().toUpperCase();
+          query.memberId = { $regex: new RegExp(search.trim(), 'i') };
         } else {
           const [firstName, lastName] = search.trim().split(' ');
           if (!lastName) {
@@ -90,9 +93,10 @@ export default function methods(filepath: string) {
       }
 
       if (typeof paymentDue === 'boolean') {
-        query.monthlyPayments = {
-          $elemMatch: { paid: paymentDue },
-        };
+        // query.monthlyPayments = {
+        //   $elemMatch: { paid: paymentDue },
+        // };
+        query.hasPaymentDue = paymentDue;
       }
 
       db.find(query)
@@ -118,6 +122,7 @@ export default function methods(filepath: string) {
     const memberId = await generateMemberId();
     const isIdPresent = await db.asyncFindOne({ memberId });
     if (isIdPresent) throw new Error('Member Id already present');
+    const dateNow = new Date();
     const member = await db.asyncInsert({
       ...data,
       workoutPlane: {},
@@ -126,7 +131,13 @@ export default function methods(filepath: string) {
       products: [],
       isMember: true,
       memberId,
-      createdAt: new Date(),
+      hasPaymentDue: false,
+      memberShipExpirationDate: new Date(
+        dateNow.getFullYear() + 1,
+        dateNow.getMonth(),
+        dateNow.getDate()
+      ),
+      createdAt: dateNow,
     });
     return member;
   };
@@ -142,6 +153,57 @@ export default function methods(filepath: string) {
     return member;
   };
 
+  const updateMemberPayment = async (
+    id: string,
+    date: Date,
+    amount: number,
+    paid: boolean
+  ) => {
+    let member = await db.asyncFindOne({ _id: id });
+    let { monthlyPayments, hasPaymentDue } = member;
+    const hasDate = monthlyPayments.find(
+      (monthlyPayment) =>
+        monthlyPayment.date.getMonth() === date.getMonth() &&
+        monthlyPayment.date.getFullYear() === date.getFullYear()
+    );
+    if (!hasDate) {
+      monthlyPayments.push({ date, amount, paid });
+    } else {
+      monthlyPayments = monthlyPayments.map((monthlyPayment) => {
+        if (
+          monthlyPayment.date.getMonth() === date.getMonth() &&
+          monthlyPayment.date.getFullYear() === date.getFullYear()
+        ) {
+          return { date, amount, paid };
+        }
+        return monthlyPayment;
+      });
+    }
+
+    if (monthlyPayments.every((monthlyPayment) => monthlyPayment.paid)) {
+      hasPaymentDue = false;
+    } else {
+      hasPaymentDue = true;
+    }
+    // await db.asyncUpdate(
+    //   { _id: id },
+    //   { $set: { monthlyPayments, hasPaymentDue } }
+    // );
+
+    // member = await getMember(id);
+    // return member;
+    console.log(
+      'BEFORE_PAYMENT_UPDATE:::',
+      JSON.stringify(member.monthlyPayments, null, 2)
+    );
+    member = await updateMember(id, { monthlyPayments, hasPaymentDue });
+    console.log(
+      'AFTER_PAYMENT_UPDATE:::',
+      JSON.stringify(member.monthlyPayments, null, 2)
+    );
+    return member;
+  };
+
   return {
     getMember,
     getMembers,
@@ -149,5 +211,6 @@ export default function methods(filepath: string) {
     createMember,
     updateMember,
     deleteMember,
+    updateMemberPayment,
   };
 }

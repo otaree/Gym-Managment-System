@@ -77,9 +77,6 @@ const Cart = () => {
 
   const onMemberSearch = async () => {
     const res = await ipcRenderer.invoke(ipcEvents.GET_MEMBERS, {
-      limit: 100,
-      skip: 0,
-      isMember: true,
       search: memberId,
     });
     setMembers(res.members);

@@ -21,6 +21,7 @@ import EditProduct from './containers/EditProduct';
 import Sales from './containers/Sales';
 import SaleDetail from './containers/SaleDetails';
 import Cart from './containers/Cart';
+import Employees from './containers/Employees';
 import WithAside from './components/WithAside';
 import { selectAuthentic } from './features/auth/authSlice';
 
@@ -218,6 +219,19 @@ export default function Routes() {
             return authentic ? (
               <WithAside>
                 <Cart />
+              </WithAside>
+            ) : (
+              <LoginPage />
+            );
+          }}
+          exact
+        />
+        <Route
+          path="/employees"
+          render={() => {
+            return authentic ? (
+              <WithAside>
+                <Employees />
               </WithAside>
             ) : (
               <LoginPage />

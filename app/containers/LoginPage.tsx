@@ -33,12 +33,7 @@ type FormData = {
 const LoginPage: React.FC = () => {
   const dispatch = useDispatch();
   // const history = useHistory();
-  const { register, formState, handleSubmit, errors } = useForm<FormData>({
-    defaultValues: {
-      name: 'admin',
-      password: 'password123@D',
-    },
-  });
+  const { register, formState, handleSubmit, errors } = useForm<FormData>();
 
   const toast = useToast();
 

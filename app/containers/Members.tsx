@@ -1,6 +1,7 @@
 /* eslint-disable no-underscore-dangle */
 import React, { useEffect, useState } from 'react';
 import { ipcRenderer } from 'electron';
+import { compareAsc } from 'date-fns';
 import { useHistory } from 'react-router';
 import {
   Box,
@@ -63,11 +64,6 @@ const Members = () => {
     await ipcRenderer.invoke(ipcEvents.CSV_MEMBERS);
     setBuildingCSV(false);
   };
-
-  const hasPaymentDue = (member: IMemberDocument): boolean =>
-    member.monthlyPayments &&
-    member.monthlyPayments.filter((monthPayment) => !monthPayment.paid).length >
-      0;
 
   useEffect(() => {
     const queryMembers: IMembersQuery = {
@@ -150,7 +146,9 @@ const Members = () => {
             <IconButton
               icon="search"
               aria-label="search"
-              onClick={() => setQuery({ ...query, search: searchTerm })}
+              onClick={() => {
+                setQuery({ ...query, search: searchTerm, skip: 0 });
+              }}
             />
           </Stack>
           <Flex>
@@ -270,6 +268,18 @@ const Members = () => {
                   </Box>
                   <Text as="td" pl={2}>
                     {`${member.firstName} ${member.lastName}`}
+                    {compareAsc(new Date(), member.memberShipExpirationDate) ===
+                      1 && (
+                      <Tag
+                        variantColor="red"
+                        variant="outline"
+                        rounded="full"
+                        size="sm"
+                        ml={2}
+                      >
+                        <TagLabel>Expired</TagLabel>
+                      </Tag>
+                    )}
                   </Text>
                   <Text as="td" textAlign="center">
                     {member.memberId}
@@ -279,7 +289,7 @@ const Members = () => {
                   </Text>
                   <Box as="td">
                     <Flex justifyContent="center">
-                      {hasPaymentDue(member) ? (
+                      {member.hasPaymentDue ? (
                         <Tag
                           size="sm"
                           variantColor="red"

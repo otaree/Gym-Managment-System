@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { Box, Flex, PseudoBox, Stack, Text } from '@chakra-ui/core';
 import { IconType } from 'react-icons';
 import { BsFillPeopleFill, BsGraphUp } from 'react-icons/bs';
-import { FaMoneyCheckAlt, FaBoxes } from 'react-icons/fa';
+import { FaMoneyCheckAlt, FaBoxes, FaUserTie } from 'react-icons/fa';
 import { CgGym } from 'react-icons/cg';
 import { ImCart } from 'react-icons/im';
 
@@ -157,6 +157,12 @@ const Aside = () => {
         title="Sales"
         isActive={history.location.pathname.includes('sales')}
         onClick={() => history.replace('/sales')}
+      />
+      <CustomButton
+        icon={FaUserTie}
+        title="Employees"
+        isActive={history.location.pathname.includes('employees')}
+        onClick={() => history.replace('/employees')}
       />
       <CustomButtonWithNum
         icon={ImCart}

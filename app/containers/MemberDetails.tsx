@@ -7,6 +7,7 @@
 /* eslint-disable react/jsx-one-expression-per-line */
 import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { ipcRenderer } from 'electron';
+import { compareAsc } from 'date-fns';
 import { useParams, useHistory } from 'react-router';
 import {
   Box,
@@ -34,9 +35,10 @@ import {
   AlertDialogOverlay,
   Button,
 } from '@chakra-ui/core';
-import { AiFillPrinter } from 'react-icons/ai';
+import { AiFillPrinter, AiOutlineIdcard } from 'react-icons/ai';
 import ReactToPrint from 'react-to-print';
 
+import MemberIDCard from '../components/MemberIdCard';
 import MemberToPDF from '../components/MemberToPDF';
 import WorkoutPlan from '../components/MemberWorkoutPlan';
 import DietPlan from '../components/MemberDietPlan';
@@ -61,6 +63,7 @@ const MemberDetails = () => {
   const [isDeleteAlert, setIsDeleteAlert] = useState(false);
   const deleteRef = useRef();
   const printRef = useRef();
+  const idRef = useRef();
   const { id } = useParams<{ id: string }>();
   const history = useHistory();
 
@@ -136,8 +139,25 @@ const MemberDetails = () => {
               <TagLabel>Due</TagLabel>
             </Tag>
           )}
+          {compareAsc(new Date(), member.memberShipExpirationDate) === 1 && (
+            <Tag variantColor="red" variant="outline" rounded="full" size="sm">
+              <TagLabel>Expired</TagLabel>
+            </Tag>
+          )}
         </Stack>
         <ButtonGroup>
+          <ReactToPrint
+            trigger={() => (
+              <IconButton
+                icon={AiOutlineIdcard}
+                variantColor="green"
+                aria-label="id card"
+                mr={2}
+              />
+            )}
+            content={() => idRef.current!}
+            documentTitle="member-id"
+          />
           <ReactToPrint
             trigger={() => (
               <IconButton
@@ -276,6 +296,13 @@ const MemberDetails = () => {
               member.createdAt.getMonth() + 1
             )}/${member.createdAt.getFullYear()}`}
         </Text>
+        <Text>Membership Expiration date:</Text>
+        <Text fontWeight="medium">
+          {member?.memberShipExpirationDate &&
+            `${zeroPad(member.memberShipExpirationDate.getDate())}/${zeroPad(
+              member.memberShipExpirationDate.getMonth() + 1
+            )}/${member.memberShipExpirationDate.getFullYear()}`}
+        </Text>
         {!member?.isMember && member?.leavingDate && (
           <>
             <Text>Leaving date:</Text>
@@ -358,6 +385,11 @@ const MemberDetails = () => {
       <Box left="-110%" pos="absolute">
         <Box ref={printRef} width="100%">
           <MemberToPDF member={member} />
+        </Box>
+      </Box>
+      <Box left="-110%" pos="absolute">
+        <Box ref={idRef} width="100%">
+          <MemberIDCard member={member} />
         </Box>
       </Box>
     </Box>

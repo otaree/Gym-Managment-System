@@ -60,30 +60,39 @@ const MonthlyPayment: React.FC<{
   //     paid: Math.random() > 0.5,
   //   }));
 
-  const onSubmit = async (data: IMonthlyPayment) => {
-    let newMonthlyPayments: IMonthlyPayment[] = [...monthlyPayments];
-    if (modalDetails.type === 'add') {
-      newMonthlyPayments = newMonthlyPayments
-        .filter(
-          (paymentDetail) =>
-            paymentDetail.date.getMonth() !== data.date.getMonth()
-        )
-        .concat([data]);
-    } else if (modalDetails.type === 'edit') {
-      newMonthlyPayments = newMonthlyPayments.map((payment) => {
-        if (payment.date.getMonth() === data.date.getMonth()) return data;
-        return payment;
-      });
-    }
+  // const onSubmit = async (data: IMonthlyPayment) => {
+  //   let newMonthlyPayments: IMonthlyPayment[] = [...monthlyPayments];
+  //   if (modalDetails.type === 'add') {
+  //     newMonthlyPayments = newMonthlyPayments
+  //       .filter(
+  //         (paymentDetail) =>
+  //           paymentDetail.date.getMonth() !== data.date.getMonth()
+  //       )
+  //       .concat([data]);
+  //   } else if (modalDetails.type === 'edit') {
+  //     newMonthlyPayments = newMonthlyPayments.map((payment) => {
+  //       if (payment.date.getMonth() === data.date.getMonth()) return data;
+  //       return payment;
+  //     });
+  //   }
 
-    newMonthlyPayments.sort((a, b) => {
-      if (a.date.getMonth() < b.date.getMonth()) return -1;
-      if (a.date.getMonth() > b.date.getMonth()) return 1;
-      return 0;
-    });
-    await ipcRenderer.invoke(ipcEvents.UPDATE_MEMBER, {
+  //   newMonthlyPayments.sort((a, b) => {
+  //     if (a.date.getMonth() < b.date.getMonth()) return -1;
+  //     if (a.date.getMonth() > b.date.getMonth()) return 1;
+  //     return 0;
+  //   });
+  //   await ipcRenderer.invoke(ipcEvents.UPDATE_MEMBER, {
+  //     id,
+  //     data: { monthlyPayments: newMonthlyPayments },
+  //   });
+  //   onClose();
+  //   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  //   onUpdate();
+  // };
+  const onSubmit = async (data: IMonthlyPayment) => {
+    await ipcRenderer.invoke(ipcEvents.UPDATE_MEMBER_MONTHLY_PAYMENT, {
       id,
-      data: { monthlyPayments: newMonthlyPayments },
+      data,
     });
     onClose();
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
